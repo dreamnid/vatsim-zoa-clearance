@@ -53,6 +53,8 @@
   $: {
     if (apt.has(origin)) {
       cur_apt = apt.get(origin);
+    } else {
+      cur_apt = undefined;
     }
   }
 
@@ -207,10 +209,11 @@
       <h3>TEC</h3>
       <ul>
         {#each tec_results as result}
+          {@debug result, cur_apt}
           {#if !result.plane_category || result.plane_category == plane_classification}
-            {#if !result.origin_rwy || !cur_apt || cur_apt.flows
-                .get(origin_flow)
-                .rwys.indexOf(result.origin_rwy) > -1}
+            {#if !result.origin_rwy || !cur_apt || (cur_apt.flows.has(origin_flow) && cur_apt.flows
+                  .get(origin_flow)
+                  .rwys.indexOf(result.origin_rwy) > -1)}
               <li>
                 <pre>{#if tec_results.length > 1}{result.alias}:
                   {/if}{result.route}</pre>
