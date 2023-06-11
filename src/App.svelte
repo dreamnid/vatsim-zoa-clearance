@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import apt, { type apt_info } from "./lib/ZOAAirports";
-  import { PLANE_EQUIPMENT, PLANE_CATEGORY } from "./types";
+  import { PLANE_EQUIPMENT, PLANE_CATEGORY, FLIGHT_PLAN } from "./types";
 
   type tecroute = {
     plane_category?: PLANE_CATEGORY;
@@ -18,6 +18,8 @@
   let origin_flow: string;
   let arrival: string = "";
   let arrival_flow: string;
+
+  let flight_plan: FLIGHT_PLAN.IFR;
 
   let plane_equipment: PLANE_EQUIPMENT = PLANE_EQUIPMENT.G;
   let plane_classification: PLANE_CATEGORY = PLANE_CATEGORY.JET;
@@ -152,63 +154,64 @@
   >
   <br />
   <label
-    >Plane Equipment Suffix Code: <select bind:value={plane_equipment}>
-      {#each Object.values(PLANE_EQUIPMENT) as equip}
-        <option value={equip}>{equip.toUpperCase()}</option>
+    >Flight Plan: <select bind:value={flight_plan}>
+      {#each Object.entries(FLIGHT_PLAN) as [name, val]}
+        <option value={val}>{name.toUpperCase()}</option>
       {/each}
     </select></label
   >
   <br />
+  {#if flight_plan == FLIGHT_PLAN.IFR}
+    <label
+      >Plane Equipment Suffix Code: <select bind:value={plane_equipment}>
+        {#each Object.values(PLANE_EQUIPMENT) as equip}
+          <option value={equip}>{equip.toUpperCase()}</option>
+        {/each}
+      </select></label
+    >
+    <br />
 
-  <h3>SOP</h3>
-  {#if cur_apt}
-    {#if cur_apt.ifr}
-      <h4>SIDs</h4>
-      {#each cur_apt.ifr.sids as sid}
-        {#if sid.proc}
-          <ul>
-            {#each sid.proc as cur_proc}
-              {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1 && ((sid.is_rnav && [PLANE_EQUIPMENT.G, PLANE_EQUIPMENT.L].indexOf(plane_equipment) > -1) || !sid.is_rnav)}
-                <li>
-                  {sid.name}{sid.revision} - {sid.abbr}{sid.revision} - {cur_proc.altitude}
-                  -
-                  {cur_proc.departure_freq} -
-                  {cur_proc.notes}
-                </li>
-              {/if}
-            {/each}
-          </ul>
-        {/if}
-      {/each}
-    {/if}
-  {/if}
-
-  <h3>TEC</h3>
-  <ul>
-    {#each tec_results as result}
-      {#if !result.plane_category || result.plane_category == plane_classification}
-        <li>
-          <pre>{#if tec_results.length > 1}{result.alias}:
-            {/if}{result.route}</pre>
-        </li>
+    <h3>SOP</h3>
+    {#if cur_apt}
+      {#if cur_apt.ifr}
+        <h4>SIDs</h4>
+        {#each cur_apt.ifr.sids as sid}
+          {#if sid.proc}
+            <ul>
+              {#each sid.proc as cur_proc}
+                {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1 && ((sid.is_rnav && [PLANE_EQUIPMENT.G, PLANE_EQUIPMENT.L].indexOf(plane_equipment) > -1) || !sid.is_rnav)}
+                  <li>
+                    {sid.name}{sid.revision} - {sid.abbr}{sid.revision} - {#if cur_proc.runways}[{#each cur_proc.runways as runway}{runway}{/each}{/if}
+                    {cur_proc.altitude}
+                    -
+                    {cur_proc.departure_freq} -
+                    {cur_proc.notes}
+                  </li>
+                {/if}
+              {/each}
+            </ul>
+          {/if}
+        {/each}
       {/if}
-    {:else}
-      No routes
-    {/each}
-  </ul>
+    {/if}
+
+    <h3>TEC</h3>
+    <ul>
+      {#each tec_results as result}
+        {#if !result.plane_category || result.plane_category == plane_classification}
+          <li>
+            <pre>{#if tec_results.length > 1}{result.alias}:
+              {/if}{result.route}</pre>
+          </li>
+        {/if}
+      {:else}
+        No routes
+      {/each}
+    </ul>
+  {:else}
+    VFR
+  {/if}
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
 </style>

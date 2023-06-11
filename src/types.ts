@@ -15,3 +15,8 @@ export enum PLANE_CATEGORY {
   PROP = "p",
   ALL = "",
 }
+
+export enum FLIGHT_PLAN {
+  IFR = "ifr",
+  VFR = "vfr",
+}
