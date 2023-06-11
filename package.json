@@ -8,13 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-	"prettier": "npx prettier --check src/",
-	"prettier:fix": "npx prettier --write src/"
+    "prettier": "npx prettier --plugin-search-dir=. --check src/",
+    "prettier:fix": "npx prettier --plugin-search-dir=. --write src/"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.4",
     "@tsconfig/svelte": "^4.0.1",
-    "prettier": "2.8.8",
+    "prettier": "^2.8.8",
+    "prettier-plugin-svelte": "^2.10.1",
     "svelte": "^3.58.0",
     "svelte-check": "^3.3.1",
     "tslib": "^2.5.0",
