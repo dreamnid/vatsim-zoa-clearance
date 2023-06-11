@@ -111,7 +111,7 @@
                 origin_rwy: alias_match.groups.origin_runway,
                 dest_rwy: alias_match.groups.dest_runway,
                 raw: line,
-                route: line_split.slice(4).join(" "),
+                route: line_split.slice(4).join(" ").trim(),
               });
             }
           }
@@ -173,10 +173,10 @@
     <br />
   {/if}
 
-  {#if cur_apt}
+  {#if origin}
     <h3>SOP</h3>
     {#if flight_plan === FLIGHT_PLAN.IFR}
-      {#if cur_apt.departure_proc && cur_apt.departure_proc.ifr}
+      {#if cur_apt && cur_apt.departure_proc && cur_apt.departure_proc.ifr}
         <h4>SIDs</h4>
         {#each cur_apt.departure_proc.ifr.sids as sid}
           {#if sid.proc}
@@ -200,27 +200,27 @@
             </ul>
           {/if}
         {/each}
-
-        <h3>TEC</h3>
-        <ul>
-          {#each tec_results as result}
-            {#if !result.plane_category || result.plane_category == plane_classification}
-              {#if !result.origin_rwy || cur_apt.flows
-                  .get(origin_flow)
-                  .rwys.indexOf(result.origin_rwy) > -1}
-                <li>
-                  <pre>{#if tec_results.length > 1}{result.alias}:
-                    {/if}{result.route}</pre>
-                </li>
-              {/if}
-            {/if}
-          {:else}
-            No routes
-          {/each}
-        </ul>
       {:else}
-        No info available
+        No info available for airport
       {/if}
+
+      <h3>TEC</h3>
+      <ul>
+        {#each tec_results as result}
+          {#if !result.plane_category || result.plane_category == plane_classification}
+            {#if !result.origin_rwy || !cur_apt || cur_apt.flows
+                .get(origin_flow)
+                .rwys.indexOf(result.origin_rwy) > -1}
+              <li>
+                <pre>{#if tec_results.length > 1}{result.alias}:
+                  {/if}{result.route}</pre>
+              </li>
+            {/if}
+          {/if}
+        {:else}
+          No routes
+        {/each}
+      </ul>
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
       {#if cur_apt.departure_proc && cur_apt.departure_proc.vfr}
