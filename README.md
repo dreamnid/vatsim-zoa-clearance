@@ -1,4 +1,4 @@
-# ZOA Vatim Clearances
+# ZOA Vatsim Clearances
 
 This tool will help ensure that the filed flight plan meets SOP, LOA, TEC requirements
 
