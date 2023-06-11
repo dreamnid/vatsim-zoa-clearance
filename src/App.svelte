@@ -24,7 +24,7 @@
   let plane_equipment: PLANE_EQUIPMENT = PLANE_EQUIPMENT.G;
   let plane_classification: PLANE_CATEGORY = PLANE_CATEGORY.JET;
 
-  let cur_apt: apt_info;
+  let cur_origin_apt: apt_info;
   let tec_results: tecroute[];
 
   // Set default equipment suffix depening on the plane classification
@@ -52,9 +52,9 @@
 
   $: {
     if (apt.has(origin)) {
-      cur_apt = apt.get(origin);
+      cur_origin_apt = apt.get(origin);
     } else {
-      cur_apt = undefined;
+      cur_origin_apt = undefined;
     }
   }
 
@@ -178,9 +178,9 @@
   {#if origin}
     <h3>SOP</h3>
     {#if flight_plan === FLIGHT_PLAN.IFR}
-      {#if cur_apt && cur_apt.departure_proc && cur_apt.departure_proc.ifr}
+      {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.ifr}
         <h4>SIDs</h4>
-        {#each cur_apt.departure_proc.ifr.sids as sid}
+        {#each cur_origin_apt.departure_proc.ifr.sids as sid}
           {#if sid.proc}
             <ul>
               {#each sid.proc as cur_proc}
@@ -209,9 +209,8 @@
       <h3>TEC</h3>
       <ul>
         {#each tec_results as result}
-          {@debug result, cur_apt}
           {#if !result.plane_category || result.plane_category == plane_classification}
-            {#if !result.origin_rwy || !cur_apt || (cur_apt.flows.has(origin_flow) && cur_apt.flows
+            {#if !result.origin_rwy || !cur_origin_apt || (cur_origin_apt.flows.has(origin_flow) && cur_origin_apt.flows
                   .get(origin_flow)
                   .rwys.indexOf(result.origin_rwy) > -1)}
               <li>
@@ -226,9 +225,9 @@
       </ul>
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
-      {#if cur_apt.departure_proc && cur_apt.departure_proc.vfr}
+      {#if cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
         <ul>
-          {#each cur_apt.departure_proc.vfr.proc as cur_proc}
+          {#each cur_origin_apt.departure_proc.vfr.proc as cur_proc}
             {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1}
               <li>
                 {#if cur_proc.rwys.length}RWY [{#each cur_proc.rwys as rwy, idx}{idx ==
