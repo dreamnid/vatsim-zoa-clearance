@@ -225,7 +225,7 @@
       </ul>
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
-      {#if cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
+      {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
         <ul>
           {#each cur_origin_apt.departure_proc.vfr.proc as cur_proc}
             {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1}
