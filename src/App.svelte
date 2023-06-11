@@ -125,7 +125,7 @@
   {#if apt.has(origin)}
     <label
       >Flow: <select bind:value={origin_flow}>
-        {#each apt.get(origin).flows as cur_flow}
+        {#each Array.from(apt.get(origin).flows.keys()) as cur_flow}
           <option value={cur_flow}>{cur_flow.toUpperCase()}</option>
         {/each}
       </select></label
@@ -136,7 +136,7 @@
   {#if apt.has(arrival)}
     <label
       >Flow: <select bind:value={arrival_flow}>
-        {#each apt.get(arrival).flows as cur_flow}
+        {#each Array.from(apt.get(arrival).flows.keys()) as cur_flow}
           <option value={cur_flow}>{cur_flow.toUpperCase()}</option>
         {/each}
       </select></label
@@ -161,6 +161,7 @@
     </select></label
   >
   <br />
+
   {#if flight_plan == FLIGHT_PLAN.IFR}
     <label
       >Plane Equipment Suffix Code: <select bind:value={plane_equipment}>
@@ -170,18 +171,25 @@
       </select></label
     >
     <br />
+  {/if}
 
+  {#if cur_apt}
     <h3>SOP</h3>
-    {#if cur_apt}
-      {#if cur_apt.ifr}
+    {#if flight_plan === FLIGHT_PLAN.IFR}
+      {#if cur_apt.departure_proc && cur_apt.departure_proc.ifr}
         <h4>SIDs</h4>
-        {#each cur_apt.ifr.sids as sid}
+        {#each cur_apt.departure_proc.ifr.sids as sid}
           {#if sid.proc}
             <ul>
               {#each sid.proc as cur_proc}
                 {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1 && ((sid.is_rnav && [PLANE_EQUIPMENT.G, PLANE_EQUIPMENT.L].indexOf(plane_equipment) > -1) || !sid.is_rnav)}
                   <li>
-                    {sid.name}{sid.revision} - {sid.abbr}{sid.revision} - {#if cur_proc.runways}[{#each cur_proc.runways as runway}{runway}{/each}{/if}
+                    {sid.name}{sid.revision} - {sid.abbr}{sid.revision} - {#if cur_proc.rwys.length}RWY
+                      [{#each cur_proc.rwys as rwy, idx}{idx ==
+                        cur_proc.rwys.length - 1
+                          ? rwy
+                          : `${rwy} `}{/each}] -
+                    {/if}
                     {cur_proc.altitude}
                     -
                     {cur_proc.departure_freq} -
@@ -192,24 +200,51 @@
             </ul>
           {/if}
         {/each}
+
+        <h3>TEC</h3>
+        <ul>
+          {#each tec_results as result}
+            {#if !result.plane_category || result.plane_category == plane_classification}
+              {#if !result.origin_rwy || cur_apt.flows
+                  .get(origin_flow)
+                  .rwys.indexOf(result.origin_rwy) > -1}
+                <li>
+                  <pre>{#if tec_results.length > 1}{result.alias}:
+                    {/if}{result.route}</pre>
+                </li>
+              {/if}
+            {/if}
+          {:else}
+            No routes
+          {/each}
+        </ul>
+      {:else}
+        No info available
+      {/if}
+    {:else if flight_plan === FLIGHT_PLAN.VFR}
+      <h4>VFR Procedures</h4>
+      {#if cur_apt.departure_proc && cur_apt.departure_proc.vfr}
+        <ul>
+          {#each cur_apt.departure_proc.vfr.proc as cur_proc}
+            {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1}
+              <li>
+                {#if cur_proc.rwys.length}RWY [{#each cur_proc.rwys as rwy, idx}{idx ==
+                    cur_proc.rwys.length - 1
+                      ? rwy
+                      : `${rwy} `}{/each}] -
+                {/if}
+                {cur_proc.altitude}
+                -
+                {cur_proc.departure_freq} -
+                {cur_proc.notes}
+              </li>
+            {/if}
+          {/each}
+        </ul>
+      {:else}
+        No VFR info avail
       {/if}
     {/if}
-
-    <h3>TEC</h3>
-    <ul>
-      {#each tec_results as result}
-        {#if !result.plane_category || result.plane_category == plane_classification}
-          <li>
-            <pre>{#if tec_results.length > 1}{result.alias}:
-              {/if}{result.route}</pre>
-          </li>
-        {/if}
-      {:else}
-        No routes
-      {/each}
-    </ul>
-  {:else}
-    VFR
   {/if}
 </main>
 
