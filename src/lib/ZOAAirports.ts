@@ -10,6 +10,13 @@ type dep_proc = {
   notes: string;
 };
 
+type arr_proc = {
+  plane_classifications: PLANE_CATEGORY[];
+  flows: string[];
+  rwys: string[];
+  notes: string;
+};
+
 type flow = {
   direction: string;
   rwys: string[];
@@ -17,6 +24,8 @@ type flow = {
 
 type apt_info = {
   date?: Date;
+  // The artcc acronym in lower case (e.g. zoa)
+  artcc: string;
   flows: Map<string, flow>;
   diagrams?: {
     airport: string;
@@ -39,6 +48,35 @@ type apt_info = {
       proc: dep_proc[];
     };
   };
+  arrival_proc?: {
+    ifr?: {
+      stars: Map<
+        string,
+        {
+          name: string;
+          revision: number;
+          url: string;
+          transitions: string[];
+          is_rnav: boolean;
+          dme_required: boolean;
+          proc?: arr_proc[];
+        }
+      >;
+      // lao: key is artcc acronym (e.g. zoa)
+      loa: Map<
+        string,
+        {
+          dep_apts: string[];
+          dep_flows: string[];
+          arr_flows: string[];
+          plane_classifications: PLANE_CATEGORY[];
+          route: string | string[];
+          is_rnav: boolean;
+          notes: string;
+        }[]
+      >;
+    };
+  };
 };
 
 const apt = new Map<String, apt_info>([
@@ -47,6 +85,7 @@ const apt = new Map<String, apt_info>([
     {
       // The date When the sop was last updated
       date: new Date(2023, 1, 24), // Note that month is 0-based so 0 is January
+      artcc: "zoa",
       flows: new Map([
         ["sfow", { direction: "west", rwys: ["28", "30"] }],
         ["oake", { direction: "east", rwys: ["10", "12"] }],
@@ -443,8 +482,343 @@ const apt = new Map<String, apt_info>([
     },
   ],
 
-  // ["sfo", { flows: ["sfow", "sfoe"] }],
+  [
+    "sfo",
+    {
+      artcc: "zoa",
+      flows: new Map([
+        ["sfow", { direction: "west", rwys: ["01", "28"] }],
+        ["sfoe", { direction: "east", rwys: ["10", "19"] }],
+      ]),
+      diagrams: {
+        airport: "https://aeronav.faa.gov/d-tpp/2305/00375AD.PDF",
+      },
+    },
+  ],
   // ["sjc", { flows: ["sfow", "sfoe", "sjce"] }],
+  [
+    "lax",
+    {
+      artcc: "zla",
+      flows: new Map([
+        ["laxw", { direction: "west", rwys: ["24", "25"] }],
+        ["laxe", { direction: "east", rwys: ["06", "07"] }],
+      ]),
+      diagrams: {
+        airport: "https://aeronav.faa.gov/d-tpp/2305/00237AD.PDF",
+      },
+      arrival_proc: {
+        ifr: {
+          stars: new Map([
+            [
+              "SADDE",
+              {
+                name: "SADDE",
+                revision: 8,
+                url: "https://aeronav.faa.gov/d-tpp/2305/00237SADDE.PDF",
+                transitions: [
+                  "AVE",
+                  "DERBB",
+                  "DINTY",
+                  "ELKEY",
+                  "FIM",
+                  "PMD",
+                  "RZS",
+                  "VTU",
+                ],
+                is_rnav: false,
+                dme_required: true,
+                proc: [],
+              },
+            ],
+            [
+              "IRNMN",
+              {
+                name: "IRNMN",
+                revision: 2,
+                url: "https://aeronav.faa.gov/d-tpp/2305/00237IRNMN_C.PDF",
+                transitions: ["BURGL", "FRASR", "MUPTT", "REBRG"],
+                is_rnav: true,
+                dme_required: false,
+                proc: [],
+              },
+            ],
+            [
+              "ZUUMA",
+              {
+                name: "ZUUMA",
+                revision: 3,
+                url: "https://aeronav.faa.gov/d-tpp/2305/00237ZUUMA.PDF",
+                transitions: ["BURGL", "REBRG"],
+                is_rnav: true,
+                dme_required: false,
+                proc: [],
+              },
+            ],
+            [
+              "KIMMO",
+              {
+                name: "KIMMO",
+                revision: 3,
+                url: "https://aeronav.faa.gov/d-tpp/2305/00237KIMMO.PDF",
+                transitions: ["LHS", "PMD", "EHF", "TTE"],
+                is_rnav: false,
+                dme_required: false,
+                proc: [],
+              },
+            ],
+            [
+              "WAYVE",
+              {
+                name: "WAYVE",
+                revision: 1,
+                url: "https://aeronav.faa.gov/d-tpp/2305/00237WAYVE.PDF",
+                transitions: ["LHS", "LOPES", "EHF", "TTE"],
+                is_rnav: false,
+                dme_required: true,
+                proc: [],
+              },
+            ],
+          ]),
+          loa: new Map([
+            [
+              "zoa",
+              [
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["laxw"],
+                  plane_classifications: [PLANE_CATEGORY.JET],
+                  route: "..AVE.SADDE",
+                  is_rnav: false,
+                  notes: "Direct no further than DOUIT",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["laxw"],
+                  plane_classifications: [PLANE_CATEGORY.JET],
+                  route: "..IRNMN",
+                  is_rnav: true,
+                  notes: "Direct no further than DOUIT",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["laxe"],
+                  plane_classifications: [PLANE_CATEGORY.JET],
+                  route: "..AVE.MOOR",
+                  is_rnav: false,
+                  notes: "Direct no further than DOUIT",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["laxe"],
+                  plane_classifications: [PLANE_CATEGORY.JET],
+                  route: "..ZUUMA",
+                  is_rnav: true,
+                  notes: "Direct no further than DOUIT",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: [],
+                  plane_classifications: [
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..KIMMO",
+                  is_rnav: false,
+                  notes: "AOV FL230",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: [],
+                  plane_classifications: [
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..WAYVE",
+                  is_rnav: true,
+                  notes: "AOB FL230",
+                },
+              ],
+            ],
+          ]),
+        },
+      },
+    },
+  ],
+  [
+    "san",
+    {
+      artcc: "zla",
+      flows: new Map([
+        ["sanw", { direction: "west", rwys: ["27"] }],
+        ["sane", { direction: "east", rwys: ["09"] }],
+      ]),
+      diagrams: {
+        airport: "https://aeronav.faa.gov/d-tpp/2305/00373AD.PDF",
+      },
+      arrival_proc: {
+        ifr: {
+          stars: new Map([
+            [
+              "",
+              {
+                name: "",
+                revision: 8,
+                url: "",
+                transitions: [],
+                is_rnav: false,
+                dme_required: true,
+                proc: [],
+              },
+            ],
+          ]),
+          loa: new Map([
+            [
+              "zoa",
+              [
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: [],
+                  arr_flows: ["sanw"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..LAX.HUBRD",
+                  is_rnav: false,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: [],
+                  arr_flows: ["sanw"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: ["MCKEY..LAX.COMIX", "YYUNG..LAX.COMIX"],
+                  is_rnav: true,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: ["sfoe"],
+                  arr_flows: ["sanw"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "CISKO..FLW..LAX.COMIX",
+                  is_rnav: true,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["sanw"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: ["..LAX.COMIX", "..HUULK.COMIX"],
+                  is_rnav: true,
+                  notes: "",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["sanw"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..LAX.HUBRD",
+                  is_rnav: false,
+                  notes: "",
+                },
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: [],
+                  arr_flows: ["sane"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: ["MCKEY..LAX.PLYYA", "YYUNG..LAX.PLYYA"],
+                  is_rnav: true,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: ["sfoe"],
+                  arr_flows: ["sane"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "CISKO..FLW..LAX.PLYYA",
+                  is_rnav: true,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: ["sfo", "oak"],
+                  dep_flows: [],
+                  arr_flows: ["sane"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..LAX.SHAMU",
+                  is_rnav: false,
+                  notes: "Direct LAX approved",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["sane"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..LAX.PLYYA",
+                  is_rnav: true,
+                  notes: "",
+                },
+                {
+                  dep_apts: [],
+                  dep_flows: [],
+                  arr_flows: ["sane"],
+                  plane_classifications: [
+                    PLANE_CATEGORY.JET,
+                    PLANE_CATEGORY.TURBOPROP,
+                    PLANE_CATEGORY.PROP,
+                  ],
+                  route: "..LAX.SHAMU",
+                  is_rnav: false,
+                  notes: "",
+                },
+              ],
+            ],
+          ]),
+        },
+      },
+    },
+  ],
 ]);
 
 export default apt;

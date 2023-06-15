@@ -25,7 +25,9 @@
   let plane_classification: PLANE_CATEGORY = PLANE_CATEGORY.JET;
 
   let cur_origin_apt: apt_info;
+  let cur_arrival_apt: apt_info;
   let tec_results: tecroute[];
+  let is_plane_rnav_capable: boolean = false;
 
   // Set default equipment suffix depening on the plane classification
   $: {
@@ -43,6 +45,12 @@
   }
 
   $: {
+    is_plane_rnav_capable = [PLANE_EQUIPMENT.G, PLANE_EQUIPMENT.L].includes(
+      plane_equipment
+    );
+  }
+
+  $: {
     if (aliases_tec.has(origin) && aliases_tec.get(origin).has(arrival)) {
       tec_results = aliases_tec.get(origin).get(arrival);
     } else {
@@ -55,6 +63,14 @@
       cur_origin_apt = apt.get(origin);
     } else {
       cur_origin_apt = undefined;
+    }
+  }
+
+  $: {
+    if (apt.has(arrival)) {
+      cur_arrival_apt = apt.get(arrival);
+    } else {
+      cur_arrival_apt = undefined;
     }
   }
 
@@ -176,7 +192,7 @@
   {/if}
 
   {#if origin}
-    <h3>SOP</h3>
+    <h3>SOP Departures</h3>
     {#if flight_plan === FLIGHT_PLAN.IFR}
       {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.ifr}
         <h4>SIDs</h4>
@@ -184,7 +200,7 @@
           {#if sid.proc}
             <ul>
               {#each sid.proc as cur_proc}
-                {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1 && ((sid.is_rnav && [PLANE_EQUIPMENT.G, PLANE_EQUIPMENT.L].indexOf(plane_equipment) > -1) || !sid.is_rnav)}
+                {#if (!cur_proc.flows.length || cur_proc.flows.includes(origin_flow)) && (!cur_proc.plane_classifications.length || cur_proc.plane_classifications.includes(plane_classification)) && ((sid.is_rnav && is_plane_rnav_capable) || !sid.is_rnav)}
                   <li>
                     {sid.name}{sid.revision} - {sid.abbr}{sid.revision} - {#if cur_proc.rwys.length}RWY
                       [{#each cur_proc.rwys as rwy, idx}{idx ==
@@ -203,7 +219,7 @@
           {/if}
         {/each}
       {:else}
-        No info available for airport
+        No info available for origin airport
       {/if}
 
       <h3>TEC</h3>
@@ -223,12 +239,39 @@
           No routes
         {/each}
       </ul>
+
+      <h3>LOA Arrival</h3>
+      {#if cur_origin_apt && cur_arrival_apt && cur_arrival_apt.arrival_proc && cur_arrival_apt.arrival_proc.ifr && cur_arrival_apt.arrival_proc.ifr.loa.has(cur_origin_apt.artcc)}
+        <ul>
+          {#each cur_arrival_apt.arrival_proc.ifr.loa.get(cur_origin_apt.artcc) as cur_loa_arrival}
+            {@debug cur_loa_arrival, cur_arrival_apt, origin, origin_flow, arrival_flow, is_plane_rnav_capable}
+            {#if (!cur_loa_arrival.dep_apts.length || cur_loa_arrival.dep_apts.includes(origin)) && (!cur_loa_arrival.dep_flows.length || cur_loa_arrival.dep_flows.includes(origin_flow)) && (!cur_loa_arrival.arr_flows.length || cur_loa_arrival.arr_flows.includes(arrival_flow)) && (!cur_loa_arrival.plane_classifications.length || cur_loa_arrival.plane_classifications.includes(plane_classification)) && ((cur_loa_arrival.is_rnav && is_plane_rnav_capable) || !cur_loa_arrival.is_rnav)}
+              <li>
+                {#if cur_loa_arrival.is_rnav}RNAV {/if}
+                {#if Array.isArray(cur_loa_arrival.route)}
+                  <ul>
+                    {#each cur_loa_arrival.route as cur_route}
+                      <pre>{cur_route}</pre>
+                    {/each}
+                  </ul>
+                {:else}
+                  <pre>
+                  {cur_loa_arrival.route}</pre>
+                {/if}
+                {#if cur_loa_arrival.notes}- {cur_loa_arrival.notes}{/if}
+              </li>
+            {/if}
+          {/each}
+        </ul>
+      {:else}
+        No info available for destination airport
+      {/if}
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
       {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
         <ul>
           {#each cur_origin_apt.departure_proc.vfr.proc as cur_proc}
-            {#if cur_proc.flows.indexOf(origin_flow) > -1 && cur_proc.plane_classifications.indexOf(plane_classification) > -1}
+            {#if (!cur_proc.flows.length || cur_proc.flows.includes(origin_flow)) && (!cur_proc.plane_classifications.length || cur_proc.plane_classifications.includes(plane_classification))}
               <li>
                 {#if cur_proc.rwys.length}RWY [{#each cur_proc.rwys as rwy, idx}{idx ==
                     cur_proc.rwys.length - 1
