@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import apt, { type apt_info } from "./lib/ZOAAirports";
+  import apt, {
+    type apt_info,
+    loa_artcc_map,
+    loa_artcc,
+  } from "./lib/ZOAAirports";
   import { PLANE_EQUIPMENT, PLANE_CATEGORY, FLIGHT_PLAN } from "./types";
 
   type tecroute = {
@@ -28,6 +32,7 @@
   let cur_arrival_apt: apt_info;
   let tec_results: tecroute[];
   let is_plane_rnav_capable: boolean = false;
+  let arrival_loas = [];
 
   // Set default equipment suffix depening on the plane classification
   $: {
@@ -63,14 +68,19 @@
       cur_origin_apt = apt.get(origin);
     } else {
       cur_origin_apt = undefined;
+      origin_flow = undefined;
     }
   }
 
   $: {
     if (apt.has(arrival)) {
       cur_arrival_apt = apt.get(arrival);
+      if (cur_arrival_apt.flows.size) {
+        arrival_flow = cur_arrival_apt.flows.keys().next().value;
+      }
     } else {
       cur_arrival_apt = undefined;
+      arrival_flow = undefined;
     }
   }
 
@@ -85,6 +95,56 @@
     arrival = arrival.toLowerCase();
     if (arrival.length == 4 && arrival.slice(0, 1)[0] == "k") {
       arrival = arrival.slice(1);
+    }
+  }
+
+  $: {
+    if (cur_origin_apt && arrival && loa_artcc_map.has(cur_origin_apt.artcc)) {
+      const loa_candidates = Object.values(
+        loa_artcc_map.get(cur_origin_apt.artcc)
+      ).flatMap((artcc_loa_key) => loa_artcc.get(artcc_loa_key));
+      console.log(loa_candidates);
+
+      arrival_loas = [];
+
+      for (const cur_loa of loa_candidates) {
+        if (cur_loa.dep_apts.length && !cur_loa.dep_apts.includes(origin)) {
+          continue;
+        }
+
+        if (
+          cur_loa.dep_flows.length &&
+          !cur_loa.dep_flows.includes(origin_flow)
+        ) {
+          continue;
+        }
+
+        if (cur_loa.arr_apts.length && !cur_loa.arr_apts.includes(arrival)) {
+          continue;
+        }
+
+        if (
+          cur_loa.arr_flows.length &&
+          !cur_loa.arr_flows.includes(arrival_flow)
+        ) {
+          continue;
+        }
+
+        if (
+          cur_loa.plane_classifications.length &&
+          !cur_loa.plane_classifications.includes(plane_classification)
+        ) {
+          continue;
+        }
+
+        if (cur_loa.is_rnav && !is_plane_rnav_capable) {
+          continue;
+        }
+
+        arrival_loas.push(cur_loa);
+      }
+    } else {
+      arrival_loas = [];
     }
   }
 
@@ -241,31 +301,25 @@
       </ul>
 
       <h3>LOA Arrival</h3>
-      {#if cur_origin_apt && cur_arrival_apt && cur_arrival_apt.arrival_proc && cur_arrival_apt.arrival_proc.ifr && cur_arrival_apt.arrival_proc.ifr.loa.has(cur_origin_apt.artcc)}
-        <ul>
-          {#each cur_arrival_apt.arrival_proc.ifr.loa.get(cur_origin_apt.artcc) as cur_loa_arrival}
-            {@debug cur_loa_arrival, cur_arrival_apt, origin, origin_flow, arrival_flow, is_plane_rnav_capable}
-            {#if (!cur_loa_arrival.dep_apts.length || cur_loa_arrival.dep_apts.includes(origin)) && (!cur_loa_arrival.dep_flows.length || cur_loa_arrival.dep_flows.includes(origin_flow)) && (!cur_loa_arrival.arr_flows.length || cur_loa_arrival.arr_flows.includes(arrival_flow)) && (!cur_loa_arrival.plane_classifications.length || cur_loa_arrival.plane_classifications.includes(plane_classification)) && ((cur_loa_arrival.is_rnav && is_plane_rnav_capable) || !cur_loa_arrival.is_rnav)}
-              <li>
-                {#if cur_loa_arrival.is_rnav}RNAV {/if}
-                {#if Array.isArray(cur_loa_arrival.route)}
-                  <ul>
-                    {#each cur_loa_arrival.route as cur_route}
-                      <pre>{cur_route}</pre>
-                    {/each}
-                  </ul>
-                {:else}
-                  <pre>
-                  {cur_loa_arrival.route}</pre>
-                {/if}
-                {#if cur_loa_arrival.notes}- {cur_loa_arrival.notes}{/if}
-              </li>
+      <ul>
+        {#each arrival_loas as loa}
+          <li>
+            {#if loa.is_rnav}
+              RNAV
             {/if}
-          {/each}
-        </ul>
-      {:else}
-        No info available for destination airport
-      {/if}
+            {#if Array.isArray(loa.route)}
+              <ul>
+                {#each loa.route as cur_route}
+                  <pre>{cur_route}</pre>
+                {/each}
+              </ul>
+            {:else}
+              <pre>
+                  {loa.route}</pre>
+            {/if}
+            {#if loa.notes}- {loa.notes}{/if}
+          </li>{/each}
+      </ul>
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
       {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
