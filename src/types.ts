@@ -20,3 +20,14 @@ export enum FLIGHT_PLAN {
   IFR = "ifr",
   VFR = "vfr",
 }
+
+export type loa = {
+  dep_apts: string[];
+  dep_flows: string[];
+  arr_apts: string[];
+  arr_flows: string[];
+  plane_classifications: PLANE_CATEGORY[];
+  route: string[];
+  is_rnav: boolean;
+  notes: string;
+};
