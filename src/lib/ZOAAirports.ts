@@ -25,6 +25,16 @@ type flow = {
   rwys: string[];
 };
 
+type star = {
+  name: string;
+  revision: number;
+  url: string;
+  transitions: string[];
+  is_rnav: boolean;
+  dme_required: boolean;
+  proc?: arr_proc[];
+};
+
 type apt_info = {
   date?: Date;
   // The artcc acronym in lower case (e.g. zoa)
@@ -53,18 +63,7 @@ type apt_info = {
   };
   arrival_proc?: {
     ifr?: {
-      stars: Map<
-        string,
-        {
-          name: string;
-          revision: number;
-          url: string;
-          transitions: string[];
-          is_rnav: boolean;
-          dme_required: boolean;
-          proc?: arr_proc[];
-        }
-      >;
+      stars: Map<string, star>;
     };
   };
 };
@@ -748,4 +747,4 @@ const loa_artcc = new Map<string, loa[]>([
 ]);
 
 export default apt;
-export { type apt_info, loa_artcc, loa_artcc_map };
+export { type apt_info, loa_artcc, loa_artcc_map, type star };

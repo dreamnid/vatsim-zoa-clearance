@@ -6,6 +6,7 @@
     loa_artcc,
   } from "./lib/ZOAAirports";
   import { PLANE_EQUIPMENT, PLANE_CATEGORY, FLIGHT_PLAN } from "./types";
+  import Route from "./Route.svelte";
 
   type tecroute = {
     plane_category?: PLANE_CATEGORY;
@@ -103,8 +104,6 @@
       const loa_candidates = Object.values(
         loa_artcc_map.get(cur_origin_apt.artcc)
       ).flatMap((artcc_loa_key) => loa_artcc.get(artcc_loa_key));
-      console.log(loa_candidates);
-
       arrival_loas = [];
 
       for (const cur_loa of loa_candidates) {
@@ -310,12 +309,11 @@
             {#if Array.isArray(loa.route)}
               <ul>
                 {#each loa.route as cur_route}
-                  <pre>{cur_route}</pre>
+                  <li><Route route={cur_route} airport={cur_arrival_apt} /></li>
                 {/each}
               </ul>
             {:else}
-              <pre>
-                  {loa.route}</pre>
+              <Route route={loa.route} airport={cur_arrival_apt} />
             {/if}
             {#if loa.notes}- {loa.notes}{/if}
           </li>{/each}
