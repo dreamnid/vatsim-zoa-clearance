@@ -213,8 +213,8 @@ const apt = new Map<String, apt_info>([
             {
               name: "NIMITZ",
               abbr: "NIMI",
-              revision: 8,
-              url: "https://aeronav.faa.gov/d-tpp/2305/00294NIMITZ.PDF",
+              revision: 5,
+              url: "https://aeronav.faa.gov/d-tpp/2309/00294NIMITZ.PDF",
               transitions: [],
               is_rnav: false,
               top_altitude: undefined,
