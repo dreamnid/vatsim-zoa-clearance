@@ -117,7 +117,7 @@ const apt = new Map<String, apt_info>([
                 {
                   plane_classifications: [PLANE_CATEGORY.JET],
                   departure_freq: "120.9 northbound / 135.1 oceanic",
-                  altitude: "CVS x FL190 (J); CVS x 10,000 (DH8D)",
+                  altitude: "CVS x FL190 (J); CVS x 10,000 (DH8D); CVS x 10,000 (Oceanic)",
                   climb_via_sid: true,
                   flows: ["sfow"],
                   rwys: [],
