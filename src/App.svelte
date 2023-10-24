@@ -76,7 +76,7 @@
   $: {
     if (apt.has(arrival)) {
       cur_arrival_apt = apt.get(arrival);
-      if (cur_arrival_apt.flows.size) {
+      if (!arrival_flow && cur_arrival_apt.flows.size) {
         arrival_flow = cur_arrival_apt.flows.keys().next().value;
       }
     } else {
