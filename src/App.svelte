@@ -300,24 +300,38 @@
       </ul>
 
       <h3>LOA Arrival</h3>
-      <ul>
-        {#each arrival_loas as loa}
-          <li>
-            {#if loa.is_rnav}
-              RNAV
-            {/if}
-            {#if Array.isArray(loa.route)}
-              <ul>
-                {#each loa.route as cur_route}
-                  <li><Route route={cur_route} airport={cur_arrival_apt} /></li>
-                {/each}
-              </ul>
-            {:else}
-              <Route route={loa.route} airport={cur_arrival_apt} />
-            {/if}
-            {#if loa.notes}- {loa.notes}{/if}
-          </li>{/each}
-      </ul>
+      <table class="loa_arrival">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>RNAV?</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each arrival_loas as loa}
+            <tr>
+              <td>
+                {#if Array.isArray(loa.route)}
+                  <ul>
+                    {#each loa.route as cur_route}
+                      <li>
+                        <Route route={cur_route} airport={cur_arrival_apt} />
+                      </li>
+                    {/each}
+                  </ul>
+                {:else}
+                  <Route route={loa.route} airport={cur_arrival_apt} />
+                {/if}
+              </td>
+              <td
+                >{#if loa.is_rnav}✓{/if}</td
+              >
+              <td>{loa.notes}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     {:else if flight_plan === FLIGHT_PLAN.VFR}
       <h4>VFR Procedures</h4>
       {#if cur_origin_apt && cur_origin_apt.departure_proc && cur_origin_apt.departure_proc.vfr}
@@ -345,5 +359,21 @@
   {/if}
 </main>
 
-<style>
+<style lang="scss">
+  table.loa_arrival {
+    border-collapse: collapse;
+
+    thead {
+      text-align: left;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f0f0a4;
+    }
+
+    th,
+    td {
+      padding: 2px 10px;
+    }
+  }
 </style>
